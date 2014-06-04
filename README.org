@@ -1,0 +1,30 @@
+#+TITLE:     Media Bash Utils
+#+AUTHOR:    Osiris Alejandro Gómez
+#+EMAIL:     osiux@osiux.com
+#+LANGUAGE:  es
+#+LINK_HOME: index.html
+#+LINK:      ISSUE https://github.com/osiris/media-bash-utils/issues/
+
+
+** overview
+
+   Repository of bash scripts for organize photos and video files usign metadata.
+
+** install
+
+   Clone the repository:
+
+   #+BEGIN_SRC sh :session :results none :exports code
+     cd ~
+     git clone https://github.com/osiris/media-bash-utils
+   #+END_SRC
+
+   Add to =~/.bashrc=:
+
+   #+BEGIN_SRC sh :session :results none :exports code
+     if [ -d "$HOME/media-bash-utils" ]
+     then
+         PATH="$HOME/media-bash-utils:$PATH"
+     fi
+   #+END_SRC
+

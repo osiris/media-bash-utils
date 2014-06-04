@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2014 Osiris Alejandro Gomez <osiux@osiux.com.ar>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+if [ -z $1 ]
+then
+	DIR='/mnt/data/fotos'
+else
+	if [ -d $1 ]
+	then
+		DIR=$1
+	else
+		echo "$1" NOT DIR
+		exit 1
+	fi
+fi
+
+cd "$PWD"
+find -type f -iname '*.jpg' | cut -c 3- | egrep "[0-9]{4}-[0-9]{2}-[0-9]{2}" | sort -u | while read F
+do
+	FILE=$(basename $F)
+	YEAR=$(echo $FILE | cut -c 1-4)
+	MONTH=$(echo $FILE | cut -c 6-7)
+	DAY=$(echo $FILE | cut -c -10)
+	MD5=$(md5sum $F | awk '{print $1}')
+	DEST=$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$FILE
+	MD5_DEST=$(md5sum $DIR'/'$DEST 2>/dev/null | awk '{print $1}')
+
+	mkdir -p $DIR'/'$YEAR'/'$YEAR'-'$MONTH'/'$DAY
+
+	if [ "$MD5_DEST" = "$MD5" ]
+	then
+		echo "es el mismo archivo" $DIR'/'$DEST
+		echo rm $FILE
+	else
+		if [ -e $DIR'/'$DEST ]
+		then
+			echo "ya existe el archivo" $DIR'/'$DEST
+		else
+			mv -vi $FILE $DIR'/'$DEST
+		fi
+	fi
+done
+

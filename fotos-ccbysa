@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2011 Osiris Alejandro Gomez <osiux@osiux.com.ar>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# This scripts make a watermark in JPEG image using ImageMagick
+# Download cc-icons True-Type font for Creative Commons License
+# http://mirrors.creativecommons.org/presskit/cc-icons.ttf
+
+CC_FONT='/usr/share/fonts/truetype/cc-icons.ttf'
+TEXT_FONT='/usr/share/fonts/truetype/ttf-inconsolata/Inconsolata.otf'
+TEXT_FONT='/usr/share/fonts/truetype/inconsolata/Inconsolata.otf'
+
+IMG=$1
+
+if [ ! -z $2 ]
+then
+    COLOR=$2
+else
+    COLOR=white
+fi
+
+cd $PWD
+if [ ! -e $IMG ]
+then
+  echo error $IMG
+  exit 1
+fi
+
+IDENTIFY=$(/usr/bin/identify $IMG)
+TYPE=$(echo $IDENTIFY | awk '{print $2}')
+
+if [ ! "$TYPE" = "JPEG" ]
+then
+    JPG=$IMG.jpg
+    convert $IMG $JPG
+    IMG=$JPG
+    IDENTIFY=$(/usr/bin/identify $IMG)
+    TYPE=$(echo $IDENTIFY | awk '{print $2}')
+fi
+
+# thanks to Rafael Bidegain for AWK tips
+W=$(echo $IDENTIFY | awk '{split($3,v,"x"); print v[1];}')
+H=$(echo $IDENTIFY | awk '{split($3,v,"x"); print v[2];}')
+
+if [ "$TYPE" = "JPEG" ]
+then
+    if [ $W -lt 3000 ];then SIZE=50;fi
+    if [ $W -lt 2500 ];then SIZE=40;fi
+    if [ $W -lt 2000 ];then SIZE=36;fi
+    if [ $W -lt 1500 ];then SIZE=30;fi
+    if [ $W -lt 1000 ];then SIZE=28;fi
+    if [ $W -lt 800 ];then SIZE=26;fi
+    if [ $W -lt 700 ];then SIZE=20;fi
+    convert $IMG -fill $COLOR -font $CC_FONT \
+    -pointsize $SIZE -gravity SouthEast \
+    -annotate 0 'cba' tmp-$IMG && convert \
+    tmp-$IMG -fill $COLOR -font $TEXT_FONT \
+    -pointsize $SIZE -gravity SouthEast \
+    -annotate 0 'OSiUX     ' $IMG.tmp && echo cc-$IMG $W $H
+    rm tmp-$IMG
+    mv $IMG.tmp $IMG
+else
+    echo error $1 unknown $TYPE
+    exit 1
+fi
+
