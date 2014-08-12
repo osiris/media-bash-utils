@@ -4,11 +4,11 @@
 #+LANGUAGE:  es
 #+LINK_HOME: index.html
 #+LINK:      ISSUE https://github.com/osiris/media-bash-utils/issues/
-
+#+INCLUDE:   mbu.org
 
 ** overview
 
-   Repository of bash scripts for organize photos and video files usign metadata.
+   Repository of bash scripts for organize media files.
 
 ** install
 
@@ -25,6 +25,7 @@
      if [ -d "$HOME/media-bash-utils" ]
      then
          PATH="$HOME/media-bash-utils:$PATH"
+         source $HOME/media-bash-utils/media-alias
      fi
    #+END_SRC
 

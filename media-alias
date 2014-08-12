@@ -1,0 +1,4 @@
+alias mbu='cd ~/media-bash-utils'
+alias ccbysa='fotos-ccbysa'
+alias ordenar='fotos-ordenar'
+alias renombrar='fotos-renombrar'

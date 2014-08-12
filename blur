@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2014 Osiris Alejandro Gomez <osiux@osiux.com.ar>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+I=$1
+N=$(basename $1 .jpg)
+
+if [ ! -e $I ]
+then
+  echo not found $I
+  exit 1
+fi
+
+echo "$N" | egrep "^[0-9]+$" >/dev/null
+OK=$(echo $?)
+
+if [ $OK -eq 0 ]
+then
+  O=$[$N+1].jpg
+else
+  O=output.jpg
+fi
+
+W=$(identify $I | awk '{print $3}' | cut -dx -f1)
+H=$(identify $I | awk '{print $3}' | cut -dx -f2)
+X1=0
+X2=$W
+
+if [ -z $2 ]
+then
+  Y1=0
+else
+  Y1=$2
+fi
+
+if [ -z $3 ]
+then
+  Y2=$H
+else
+  Y2=$3
+fi
+
+if [ ! -z $4 ]
+then
+  O=output.jpg
+fi
+
+
+echo input: $I output: $O x1: $X1 x2: $X2 y1: $Y1 y2: $Y2
+
+convert $I -blur 10x8 blur.jpg
+convert $I -gamma 0 -fill white -draw "rectangle $X1,$Y1,$X2,$Y2" mask.jpg
+convert $I blur.jpg mask.jpg -composite $O
+

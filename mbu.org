@@ -1,0 +1,36 @@
+#+TITLE:     Media Bash Utils
+#+AUTHOR:    Osiris Alejandro Gómez
+#+EMAIL:     osiux@osiux.com
+#+LANGUAGE:  en
+#+LINK:      ISSUE https://github.com/osiris/media-bash-utils/issues/
+
+
+
+
+** Releases
+*** Release 0.1 [1/2]
+**** DONE publish actual version of scripts
+     :LOGBOOK:
+     CLOCK: [2014-08-12 mar 09:35]--[2014-08-12 mar 09:50] =>  0:15
+     :END:
+
+**** NEXT add examples [0/7]
+
+     - [ ] fotos-renombrar
+     - [ ] fotos-ordenar
+     - [ ] fotos-identificar
+     - [ ] fotos-ccbysa
+     - [ ] pdf-preview
+     - [ ] epub-preview
+     - [ ] blur
+
+** Bugs [0/0]
+** Features [1/1]
+*** DONE add =blur= partial of image
+    CLOSED: [2014-08-12 mar 09:35]
+    :LOGBOOK:
+    - State "DONE"       from ""           [2014-08-12 mar 09:35]
+    CLOCK: [2014-08-12 mar 08:50]--[2014-08-12 mar 09:35] =>  0:45
+    CLOCK: [2014-08-11 lun 17:06]--[2014-08-11 lun 18:17] =>  1:11
+    :END:
+
