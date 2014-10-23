@@ -8,11 +8,23 @@
 
 
 ** Releases
-*** Release 0.1 [1/2]
+*** Release 0.1 [2/3]
 **** DONE publish actual version of scripts
      :LOGBOOK:
      CLOCK: [2014-08-12 mar 09:35]--[2014-08-12 mar 09:50] =>  0:15
      :END:
+
+**** DONE refactor fotos-renombrar
+     CLOSED: [2014-10-22 mié 23:31]
+     :LOGBOOK:
+     - State "DONE"       from "NEXT"       [2014-10-22 mié 23:31]
+     CLOCK: [2014-10-09 jue 08:53]--[2014-10-09 jue 09:43] =>  0:50
+     :END:
+
+     - [X] add parameters
+     - [X] replace jhead for all to single file
+     - [X] detect files without exif tags
+     - [X] no rename actual pattern
 
 **** NEXT add examples [0/7]
 

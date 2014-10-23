@@ -16,32 +16,88 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-cd $PWD
-find -type f -iname '*.jpg' | cut -c 3- | while read i
+DIR=$PWD
+LEVEL=1
+EXCLUDE='[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}-[0-9a-z]{6}.jpg'
+
+while getopts "d:l:" OPTION
 do
-	JPEG=$(file "$i" | grep -o JPEG)
-	if [ "$JPEG" = "JPEG" ]
-	then
-	    HASH=$(md5sum "$i" | cut -c -6)
-	    if [ -e $HASH.jpg ]
-	    then
-		echo "ya existe el archivo" $HASH.jpg
-	    else
-		mv -vi "$i" $HASH.jpg
-	    fi
-		
-		identify $HASH.jpg 2>/dev/null
-		OK=$(echo $?)
-		if [ $OK -gt 0 ]
-		then
-			echo "No es un JPEG válido" $HASH.jpg
-			mv -vi $HASH.jpg $HASH.dat
-		fi
-	else
-		echo "No es un JPEG" "$i"
-		mv -vi "$i" "$i.dat"
-	fi
+  case $OPTION in
+    d)
+      DIR=$OPTARG
+      ;;
+    l)
+      LEVEL=$OPTARG
+      ;;
+  esac
 done
 
-jhead -n%Y-%m-%d-%H%M-%f *.jpg
+if [ ! -d $DIR ]
+then
+  echo ERROR $DIR
+fi
+
+# verify LEVEL is a number?
+if [[ ! $LEVEL =~ ^[0-9]+$ ]]
+then
+  echo ERROR invalid level: $LEVEL
+  exit 1
+fi
+
+cd $PWD
+
+FIND="find -maxdepth $LEVEL -type f -iname "
+
+$FIND '*.jpg' | cut -c 3- | egrep -v $EXCLUDE | while read i
+do
+  JPEG=$(file "$i" | grep -o JPEG)
+
+  if [ "$JPEG" = "JPEG" ]
+  then
+
+    HASH=$(md5sum "$i" | cut -c -6)
+
+    if [ -e $HASH.jpg ]
+    then
+      echo "ya existe el archivo" $HASH.jpg
+    else
+      mv -vi "$i" $HASH.jpg
+    fi
+
+    identify $HASH.jpg 2>/dev/null
+    OK=$(echo $?)
+
+    if [ $OK -gt 0 ]
+    then
+      echo "invalid JPEG" $HASH.jpg
+      mv -vi $HASH.jpg $HASH.dat
+    fi
+
+    FILE_DATE=$(jhead $HASH.jpg | grep "File date" | cut -d: -f2)
+
+    if [[ ! $FILE_DATE =~ [0-9]{2} ]]
+    then
+      NOW=$(date +%Y:%m:%d)
+      jhead -ds $NOW
+    fi
+
+    DATE=$(jhead $HASH.jpg | grep "Date/Time" | egrep -o "0000:00:00")
+
+    if [ "$DATE" = "0000:00:00" ]
+    then
+      jhead -exonly -ft "$HASH.jpg"
+    fi
+
+
+    jhead -exonly -n%Y-%m-%d-%H%M-%f "$HASH.jpg"
+
+  else
+    echo "invalid JPEG: " "$i"
+    if [ ! -e "$i.dat" ]
+    then
+      mv -v "$i" "$i.dat"
+    fi
+  fi
+done
+
 
