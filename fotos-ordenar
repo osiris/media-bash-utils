@@ -16,43 +16,65 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-if [ -z $1 ]
+DIR='/mnt/data/fotos'
+LEVEL=1
+PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}-[0-9a-z]{6}.jpg'
+
+while getopts "d:l:" OPTION
+do
+  case $OPTION in
+    d)
+      DIR="$OPTARG"
+      ;;
+    l)
+      LEVEL=$OPTARG
+      ;;
+  esac
+done
+
+[ ! -d "$DIR" ] && exit 1
+
+# verify LEVEL is a number?
+if [[ ! $LEVEL =~ ^[0-9]+$ ]]
 then
-	DIR='/mnt/data/fotos'
-else
-	if [ -d $1 ]
-	then
-		DIR=$1
-	else
-		echo "$1" NOT DIR
-		exit 1
-	fi
+  echo ERROR invalid level: $LEVEL
+  exit 1
 fi
 
 cd "$PWD"
-find -type f -iname '*.jpg' | cut -c 3- | egrep "[0-9]{4}-[0-9]{2}-[0-9]{2}" | sort -u | while read F
+FIND="find -maxdepth $LEVEL -type f -iname "
+
+$FIND '*.jpg' | cut -c 3- | egrep $PATTERN | sort -u | while read F
 do
-	FILE=$(basename $F)
-	YEAR=$(echo $FILE | cut -c 1-4)
-	MONTH=$(echo $FILE | cut -c 6-7)
-	DAY=$(echo $FILE | cut -c -10)
-	MD5=$(md5sum $F | awk '{print $1}')
-	DEST=$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$FILE
-	MD5_DEST=$(md5sum $DIR'/'$DEST 2>/dev/null | awk '{print $1}')
+    FILE=$(basename "$F")
+    YEAR=$(echo $FILE | cut -c 1-4)
+    MONTH=$(echo $FILE | cut -c 6-7)
+    DAY=$(echo $FILE | cut -c -10)
+    MD5=$(md5sum "$F" | awk '{print $1}')
+    DEST=$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$FILE
+    MD5_DEST=$(md5sum $DIR'/'$DEST 2>/dev/null | awk '{print $1}')
 
-	mkdir -p $DIR'/'$YEAR'/'$YEAR'-'$MONTH'/'$DAY
+    mkdir -p $DIR'/'$YEAR'/'$YEAR'-'$MONTH'/'$DAY
 
-	if [ "$MD5_DEST" = "$MD5" ]
-	then
-		echo "es el mismo archivo" $DIR'/'$DEST
-		echo rm $FILE
-	else
-		if [ -e $DIR'/'$DEST ]
-		then
-			echo "ya existe el archivo" $DIR'/'$DEST
-		else
-			mv -vi $FILE $DIR'/'$DEST
-		fi
-	fi
+    if [ "$MD5_DEST" = "$MD5" ]
+    then
+        echo "duplicate file: " $DIR'/'$DEST
+        DUP=$DIR'/'duplicate'/'$FILE
+        if [ -e "$DUP" ]
+        then
+            echo "delete re-duplicate file: $F"
+            rm "$F"
+        else
+            echo "move duplicate file: $DUP"
+            mv -i "$F" "$DUP"
+        fi
+    else
+        if [ -e $DIR'/'$DEST ]
+        then
+            echo "duplicate filename: " $DIR'/'$DEST
+        else
+            mv -i "$F" $DIR'/'$DEST
+        fi
+    fi
 done
 
