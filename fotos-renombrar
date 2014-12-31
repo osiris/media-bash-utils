@@ -47,22 +47,33 @@ FIND="find -maxdepth $LEVEL -type f -iname "
 
 $FIND '*.jp*g' | cut -c 3- | egrep -v $EXCLUDE | while read i
 do
-  JPEG=$(file "$i" | grep -o JPEG | awk '{print $1}' | head -1)
+  FILE=$(basename "$i")
+
+  file "$i" | grep -o JPEG | awk '{print $1}' | head -1 >.f.tmp
+  JPEG=$(cat .f.tmp && rm .f.tmp)
 
   if [ "$JPEG" = "JPEG" ]
   then
-
-    HASH=$(md5sum "$i" | cut -c -6)
+    MD5=$(md5sum "$i" | cut -c -32)
+    HASH=$(echo $MD5 | cut -c -6)
 
     if [ -e $HASH.jpg ]
     then
-      echo "ya existe el archivo" $HASH.jpg
-      continue
+      MD5_HASH=$(md5sum $HASH.jpg | cut -c -32)
+      if [ "$MD5" = "$MD5_HASH" ]
+      then 
+        if [ ! "$FILE" = "$HASH.jpg" ]
+        then
+         echo "duplicate file: " $HASH.jpg
+        fi
+      else
+        echo "duplicate filename: " $HASH.jpg
+      fi
     else
       mv -vi "$i" $HASH.jpg
     fi
 
-    identify $HASH.jpg 2>/dev/null
+    identify $HASH.jpg >/dev/null 2>/dev/null
     OK=$(echo $?)
 
     if [ $OK -gt 0 ]
@@ -72,21 +83,50 @@ do
       continue
     fi
 
-    FILE_DATE=$(jhead $HASH.jpg | grep "File date" | cut -d: -f2)
+    NOW_YY=$(date +%Y)
+    NOW_MM=$(date +%m)
+    NOW_DD=$(date +%d)
+    NOW_HO=$(date +%H)
+    NOW_MI=$(date +%M)
+    NOW_SS=$(date +%S)
 
-    if [[ ! $FILE_DATE =~ [0-9]{2} ]]
+    FILE_DATE=$(jhead $HASH.jpg | grep "File date")
+    FILE_YY=$(echo $FILE_DATE | cut -d: -f2 | tr -d ' ')
+    FILE_MM=$(echo $FILE_DATE | cut -d: -f3 | tr -d ' ')
+    FILE_DD=$(echo $FILE_DATE | cut -d: -f4 | cut -d' ' -f1)
+    FILE_HO=$(echo $FILE_DATE | cut -d: -f4 | cut -d' ' -f2)
+    FILE_MI=$(echo $FILE_DATE | cut -d: -f4 | cut -d' ' -f5)
+    FILE_SS=$(echo $FILE_DATE | cut -d: -f4 | cut -d' ' -f6)
+
+    [[ $FILE_YY =~ [0-9]{2} ]] && YY=$FILE_YY || YY=$NOW_YY
+    [[ $FILE_MM =~ [0-9]{2} ]] && MM=$FILE_MM || MM=$NOW_MM
+    [[ $FILE_DD =~ [0-9]{2} ]] && DD=$FILE_DD || DD=$NOW_DD
+    [[ $FILE_HO =~ [0-9]{2} ]] && HO=$FILE_HO || HO=$NOW_HO
+    [[ $FILE_MI =~ [0-9]{2} ]] && MI=$FILE_MI || MI=$NOW_MI
+    [[ $FILE_SS =~ [0-9]{2} ]] && SS=$FILE_SS || SS=$NOW_SS
+
+    DATE_FIX=$YY:$MM:$DD
+    TIME_FIX=$HO:$MI:$SS
+    DATE_EXIF=$(jhead $HASH.jpg | grep "Date/Time" | awk '{print $3}' | egrep -o "0000:00:00")
+
+    if [ -z "$DATE_EXIF" ]
     then
-      NOW=$(date +%Y:%m:%d)
-      jhead -ds $NOW
+      echo "create minimal exif in file: $HASH.jpg"
+      jhead -mkexif -ds$DATE_FIX $HASH.jpg >/dev/null
     fi
 
-    DATE=$(jhead $HASH.jpg | grep "Date/Time" | egrep -o "0000:00:00")
-
-    if [ "$DATE" = "0000:00:00" ]
+    if [ "$DATE_EXIF" = "0000:00:00" ]
     then
-      jhead -exonly -ft "$HASH.jpg"
+      echo "fix exif timestamp in file: $HASH.jpg with: $DATE_FIX" 
+      jhead -ds$DATE_FIX $HASH.jpg
+      OK=$(echo $?)
+      if [ $OK -eq 0 ]
+      then
+        jhead -exonly -ft "$HASH.jpg"
+        DATE_TOUCH=${YY}${MM}${DD}${HO}${MI}
+        touch -m -t $DATE_TOUCH "$HASH.jpg"
+      fi
     fi
-
 
     jhead -exonly -n%Y-%m-%d-%H%M-%f "$HASH.jpg"
 
