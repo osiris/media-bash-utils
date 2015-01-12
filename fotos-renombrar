@@ -107,7 +107,7 @@ do
 
     DATE_FIX=$YY:$MM:$DD
     TIME_FIX=$HO:$MI:$SS
-    DATE_EXIF=$(jhead $HASH.jpg | grep "Date/Time" | awk '{print $3}' | egrep -o "0000:00:00")
+    DATE_EXIF=$(jhead $HASH.jpg | grep "Date/Time" | awk '{print $3}' | egrep -o "[0-9]{4}:[0-9]{2}:[0-9]{2}")
 
     if [ -z "$DATE_EXIF" ]
     then
