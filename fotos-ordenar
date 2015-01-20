@@ -34,6 +34,8 @@ done
 
 [ ! -d "$DIR" ] && exit 1
 
+mkdir -p $DIR'/'duplicate
+
 # verify LEVEL is a number?
 if [[ ! $LEVEL =~ ^[0-9]+$ ]]
 then
