@@ -18,7 +18,7 @@
 
 DIR='/mnt/data/fotos'
 LEVEL=1
-PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}-[0-9a-z]{6}.jpg'
+PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}-[0-9a-z]{6,7}.jpg'
 
 while getopts "d:l:" OPTION
 do
@@ -53,10 +53,18 @@ do
     MONTH=$(echo $FILE | cut -c 6-7)
     DAY=$(echo $FILE | cut -c -10)
     MD5=$(md5sum "$F" | awk '{print $1}')
-    DEST=$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$FILE
-    MD5_DEST=$(md5sum $DIR'/'$DEST 2>/dev/null | awk '{print $1}')
+    WIDTH=`identify -format '%w' $F`
 
-    mkdir -p $DIR'/'$YEAR'/'$YEAR'-'$MONTH'/'$DAY
+    if [ -z "$WIDTH" ]
+    then
+        DEST=$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$FILE
+        mkdir -p $DIR'/'$YEAR'/'$YEAR'-'$MONTH'/'$DAY
+    else
+        DEST=$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$WIDTH'/'$FILE
+        mkdir -p $DIR'/'$YEAR'/'$YEAR'-'$MONTH'/'$DAY'/'$WIDTH
+    fi
+
+    MD5_DEST=$(md5sum $DIR'/'$DEST 2>/dev/null | awk '{print $1}')
 
     if [ "$MD5_DEST" = "$MD5" ]
     then
@@ -67,8 +75,13 @@ do
             echo "delete re-duplicate file: $F"
             rm "$F"
         else
-            echo "move duplicate file: $DUP"
-            mv -i "$F" "$DUP"
+            if [ "$F" != "$DIR/$DEST" ]
+            then
+              echo "move duplicate file: $F -> $DUP"
+              mv -i "$F" "$DUP"
+            else
+              echo "origin and destination are the same file: $F"
+            fi
         fi
     else
         if [ -e $DIR'/'$DEST ]
