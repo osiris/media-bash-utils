@@ -1,0 +1,16 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && exit 1
+
+cd "$PWD"
+
+[[ ! -e "$1" ]] && exit 1
+
+identify "$1"
+W=`identify -format '%w' "$1"`
+H=`identify -format '%h' "$1"`
+w=`echo $W/2+1 | bc`
+n=`basename $1 .png`
+
+convert "$1" -crop ${w}x${H} +repage tile-$n-%d.png
+
